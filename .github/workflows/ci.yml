@@ -2,6 +2,7 @@ name: Test assignment portal
 
 on:
   push:
+  workflow_dispatch:
 
 jobs:
   test-and-report:
