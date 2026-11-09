@@ -36,7 +36,8 @@ jobs:
       - name: Send report to local receiver
         if: always()
         shell: pwsh
-        run: curl.exe --fail-with-body -X POST $env:RECEIVER_URL -H "Content-Type: application/json" --data-binary "@ci-test-report.json"
+        run: |
+          curl.exe --fail-with-body -X POST $env:RECEIVER_URL -H "Content-Type: application/json" --data-binary "@ci-test-report.json"
       - name: Fail the job when tests fail
         if: always() && steps.tests.outputs.exit_code != '0'
         shell: pwsh
