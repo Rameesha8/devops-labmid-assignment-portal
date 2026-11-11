@@ -13,14 +13,15 @@ jobs:
       RECEIVER_URL: ${{ vars.RECEIVER_URL || 'http://127.0.0.1:5001/report' }}
     steps:
       - uses: actions/checkout@v4
+      - name: Install portable Python environment manager
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: false
       - name: Create project virtual environment and install dependencies
         shell: powershell
         run: |
-          python -m venv --without-pip .venv
-          Invoke-WebRequest -Uri https://bootstrap.pypa.io/get-pip.py -OutFile get-pip.py
-          .\.venv\Scripts\python.exe get-pip.py
-          Remove-Item get-pip.py
-          .\.venv\Scripts\python.exe -m pip install -r requirements.txt
+          uv venv --managed-python --python 3.12 .venv
+          uv pip install --python .\.venv\Scripts\python.exe -r requirements.txt
       - name: Run automated tests
         id: tests
         shell: powershell
