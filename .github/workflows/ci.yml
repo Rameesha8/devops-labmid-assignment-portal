@@ -13,9 +13,6 @@ jobs:
       RECEIVER_URL: ${{ vars.RECEIVER_URL || 'http://127.0.0.1:5001/report' }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
       - name: Create project virtual environment and install dependencies
         shell: pwsh
         run: |
