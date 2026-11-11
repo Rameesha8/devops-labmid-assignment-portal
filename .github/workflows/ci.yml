@@ -14,28 +14,28 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Create project virtual environment and install dependencies
-        shell: pwsh
+        shell: powershell
         run: |
           python -m venv .venv
           .\.venv\Scripts\python.exe -m pip install --upgrade pip
           .\.venv\Scripts\python.exe -m pip install -r requirements.txt
       - name: Run automated tests
         id: tests
-        shell: pwsh
+        shell: powershell
         run: |
           .\.venv\Scripts\python.exe -m pytest --json-report --json-report-file=test-results.json
           "exit_code=$LASTEXITCODE" >> $env:GITHUB_OUTPUT
           exit 0
       - name: Build complete test report
         if: always()
-        shell: pwsh
+        shell: powershell
         run: .\.venv\Scripts\python.exe scripts\build_report.py --input test-results.json --output ci-test-report.json
       - name: Send report to local receiver
         if: always()
-        shell: pwsh
+        shell: powershell
         run: |
           curl.exe --fail-with-body -X POST $env:RECEIVER_URL -H "Content-Type: application/json" --data-binary "@ci-test-report.json"
       - name: Fail the job when tests fail
         if: always() && steps.tests.outputs.exit_code != '0'
-        shell: pwsh
+        shell: powershell
         run: exit 1
