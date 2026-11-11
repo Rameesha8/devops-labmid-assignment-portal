@@ -18,7 +18,7 @@ def valid_payload():
 
 def test_valid_submission_is_saved_and_listed(client, tmp_path):
     response = client.post("/submit", data=valid_payload(), follow_redirects=True)
-    assert response.status_code == 201  # Intentional defect for CI demonstration.
+    assert response.status_code == 200
     assert b"Ayesha Khan" in response.data
     assert json.loads((tmp_path / "submissions.json").read_text())[0]["registration_number"] == "FA22-BCS-001"
 
