@@ -16,8 +16,10 @@ jobs:
       - name: Create project virtual environment and install dependencies
         shell: powershell
         run: |
-          python -m venv .venv
-          .\.venv\Scripts\python.exe -m pip install --upgrade pip
+          python -m venv --without-pip .venv
+          Invoke-WebRequest -Uri https://bootstrap.pypa.io/get-pip.py -OutFile get-pip.py
+          .\.venv\Scripts\python.exe get-pip.py
+          Remove-Item get-pip.py
           .\.venv\Scripts\python.exe -m pip install -r requirements.txt
       - name: Run automated tests
         id: tests
