@@ -1,4 +1,7 @@
 .venv/
+.venv-original/
+.uv-cache/
+.python-install/
 __pycache__/
 .pytest_cache/
 submissions.json

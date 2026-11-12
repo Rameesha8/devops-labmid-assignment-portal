@@ -1,7 +1,6 @@
 """Assignment submission portal."""
 
 import json
-import os
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -10,24 +9,81 @@ from flask import Flask, redirect, render_template_string, request, url_for
 
 PAGE = """
 <!doctype html>
-<title>Assignment Submission Portal</title>
-<h1>Assignment Submission Portal</h1>
-{% if errors %}<ul class="errors">{% for error in errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
-<form method="post" action="{{ url_for('submit') }}">
-  <label>Name <input name="name" value="{{ form.name }}"></label><br>
-  <label>Registration number <input name="registration_number" value="{{ form.registration_number }}"></label><br>
-  <label>Assignment title <input name="assignment_title" value="{{ form.assignment_title }}"></label><br>
-  <label>Submission URL <input name="submission_url" value="{{ form.submission_url }}"></label><br>
-  <button type="submit">Submit assignment</button>
-</form>
-<h2>Saved submissions</h2>
-<ul id="submission-list">
-{% for item in submissions %}
-  <li>{{ item.name }} - {{ item.registration_number }} - {{ item.assignment_title }} - <a href="{{ item.submission_url }}">{{ item.submission_url }}</a></li>
-{% else %}
-  <li>No submissions yet.</li>
-{% endfor %}
-</ul>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Assignment Submission Portal</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <main class="page-shell">
+    <header class="hero">
+      <p class="eyebrow">DEVOPS LAB MID</p>
+      <h1>Assignment Submission Portal</h1>
+      <p>Submit your assignment link securely and keep track of saved submissions.</p>
+    </header>
+
+    <section class="card" aria-labelledby="form-heading">
+      <h2 id="form-heading">New submission</h2>
+      <p class="helper-text">All fields are required. Use a complete HTTP or HTTPS link.</p>
+      {% if errors %}
+      <div class="alert" role="alert">
+        <strong>Please fix the following:</strong>
+        <ul>{% for error in errors %}<li>{{ error }}</li>{% endfor %}</ul>
+      </div>
+      {% endif %}
+      <form method="post" action="{{ url_for('submit') }}">
+        <div class="field">
+          <label for="name">Student name</label>
+          <input id="name" name="name" value="{{ form.name }}" placeholder="e.g. Ayesha Khan" required>
+        </div>
+        <div class="field">
+          <label for="registration_number">Registration number</label>
+          <input id="registration_number" name="registration_number" value="{{ form.registration_number }}" placeholder="e.g. FA22-BCS-001" required>
+        </div>
+        <div class="field">
+          <label for="assignment_title">Assignment title</label>
+          <input id="assignment_title" name="assignment_title" value="{{ form.assignment_title }}" placeholder="e.g. DevOps Lab Mid" required>
+        </div>
+        <div class="field">
+          <label for="submission_url">Submission URL</label>
+          <input id="submission_url" type="url" name="submission_url" value="{{ form.submission_url }}" placeholder="https://example.com/submission" required>
+        </div>
+        <button type="submit">Submit assignment <span aria-hidden="true">→</span></button>
+      </form>
+    </section>
+
+    <section class="card submissions" aria-labelledby="submissions-heading">
+      <div class="section-heading">
+        <div>
+          <h2 id="submissions-heading">Saved submissions</h2>
+          <p>Submissions received through this portal.</p>
+        </div>
+        <span class="count">{{ submissions|length }}</span>
+      </div>
+      <div id="submission-list">
+      {% for item in submissions %}
+        <article class="submission-item">
+          <div class="student-avatar">{{ item.name[0]|upper }}</div>
+          <div class="submission-details">
+            <h3>{{ item.assignment_title }}</h3>
+            <p>{{ item.name }} <span>•</span> {{ item.registration_number }}</p>
+            <a href="{{ item.submission_url }}" target="_blank" rel="noopener">Open submission ↗</a>
+          </div>
+        </article>
+      {% else %}
+        <div class="empty-state">
+          <div class="empty-icon">⌁</div>
+          <p>No submissions yet.</p>
+          <span>Your saved submissions will appear here.</span>
+        </div>
+      {% endfor %}
+      </div>
+    </section>
+  </main>
+</body>
+</html>
 """
 
 
