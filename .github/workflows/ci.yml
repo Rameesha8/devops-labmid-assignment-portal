@@ -94,7 +94,9 @@ jobs:
     name: Deploy static demo to GitHub Pages
     needs: test-and-report
     if: needs.test-and-report.result == 'success' && github.ref == 'refs/heads/main'
-    runs-on: [self-hosted, windows]
+    # Pages deployment has no localhost dependency, so a GitHub-hosted Linux
+    # runner supplies the Bash environment required by the Pages artifact action.
+    runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
