@@ -4,6 +4,11 @@ on:
   push:
   workflow_dispatch:
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
   test-and-report:
     # A self-hosted Windows runner is intentional: localhost is the computer
@@ -11,6 +16,11 @@ jobs:
     runs-on: [self-hosted, windows]
     env:
       RECEIVER_URL: ${{ vars.RECEIVER_URL || 'http://127.0.0.1:5001/report' }}
+      SMTP_HOST: ${{ secrets.SMTP_HOST }}
+      SMTP_PORT: ${{ secrets.SMTP_PORT }}
+      SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+      SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+      REPORT_EMAIL_TO: ${{ secrets.REPORT_EMAIL_TO }}
     steps:
       - uses: actions/checkout@v4
       - name: Install portable Python environment manager
@@ -38,7 +48,63 @@ jobs:
         shell: powershell
         run: |
           curl.exe --fail-with-body -X POST $env:RECEIVER_URL -H "Content-Type: application/json" --data-binary "@ci-test-report.json"
+      - name: Prepare email report summary
+        if: always() && env.SMTP_HOST != '' && env.SMTP_USERNAME != '' && env.SMTP_PASSWORD != '' && env.REPORT_EMAIL_TO != ''
+        shell: powershell
+        run: |
+          $report = Get-Content ci-test-report.json -Raw | ConvertFrom-Json
+          $results = ($report.tests | ForEach-Object { "- $($_.name): $($_.result)" }) -join "`n"
+          @"
+          Assignment Portal CI Report
+
+          Repository: $($report.repository)
+          Branch: $($report.branch)
+          Commit: $($report.commit_sha)
+          Pipeline run: $($report.pipeline_run_id)
+          Overall status: $($report.summary.status)
+          Total tests: $($report.summary.total)
+          Passed: $($report.summary.passed)
+          Failed: $($report.summary.failed)
+
+          Individual results:
+          $results
+
+          The complete JSON report is attached.
+          "@ | Set-Content email-report.txt
+      - name: Email completed test report
+        if: always() && env.SMTP_HOST != '' && env.SMTP_USERNAME != '' && env.SMTP_PASSWORD != '' && env.REPORT_EMAIL_TO != ''
+        uses: dawidd6/action-send-mail@v6
+        with:
+          server_address: ${{ secrets.SMTP_HOST }}
+          server_port: ${{ secrets.SMTP_PORT || '587' }}
+          secure: false
+          require_tls: true
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: "Assignment portal CI - ${{ github.sha }}"
+          to: ${{ secrets.REPORT_EMAIL_TO }}
+          from: ${{ secrets.SMTP_USERNAME }}
+          body: file://email-report.txt
+          attachments: ci-test-report.json
       - name: Fail the job when tests fail
         if: always() && steps.tests.outputs.exit_code != '0'
         shell: powershell
         run: exit 1
+
+  deploy-pages:
+    name: Deploy static demo to GitHub Pages
+    needs: test-and-report
+    if: needs.test-and-report.result == 'success' && github.ref == 'refs/heads/main'
+    runs-on: [self-hosted, windows]
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: static-demo
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

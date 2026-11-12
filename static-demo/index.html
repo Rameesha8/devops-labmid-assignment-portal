@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Assignment Submission Portal Demo</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="page-shell">
+    <header class="hero">
+      <p class="eyebrow">DEVOPS LAB MID - STATIC DEMO</p>
+      <h1>Assignment Submission Portal</h1>
+      <p>This GitHub Pages demo is deployed automatically only after the CI tests pass.</p>
+    </header>
+
+    <section class="card">
+      <h2>New submission</h2>
+      <p class="helper-text">This static demo validates and stores submissions in this browser only.</p>
+      <div id="alert" class="alert" hidden></div>
+      <form id="submission-form">
+        <div class="field"><label for="name">Student name</label><input id="name" name="name" required placeholder="e.g. Ayesha Khan"></div>
+        <div class="field"><label for="registration">Registration number</label><input id="registration" name="registration" required placeholder="e.g. FA22-BCS-001"></div>
+        <div class="field"><label for="title">Assignment title</label><input id="title" name="title" required placeholder="e.g. DevOps Lab Mid"></div>
+        <div class="field"><label for="url">Submission URL</label><input id="url" name="url" type="url" required placeholder="https://example.com/submission"></div>
+        <button type="submit">Submit assignment <span aria-hidden="true">→</span></button>
+      </form>
+    </section>
+
+    <section class="card">
+      <div class="section-heading"><div><h2>Saved submissions</h2><p>Saved locally in this browser.</p></div><span id="count" class="count">0</span></div>
+      <div id="submission-list" class="empty-state"><div class="empty-icon">⌁</div><p>No submissions yet.</p><span>Your saved submissions will appear here.</span></div>
+    </section>
+  </main>
+  <script>
+    const storageKey = "assignment-demo-submissions";
+    const form = document.querySelector("#submission-form");
+    const list = document.querySelector("#submission-list");
+    const count = document.querySelector("#count");
+    const alertBox = document.querySelector("#alert");
+    const getItems = () => JSON.parse(localStorage.getItem(storageKey) || "[]");
+    const render = () => {
+      const items = getItems(); count.textContent = items.length;
+      if (!items.length) { list.className = "empty-state"; list.innerHTML = "<div class='empty-icon'>⌁</div><p>No submissions yet.</p><span>Your saved submissions will appear here.</span>"; return; }
+      list.className = "submission-list";
+      list.innerHTML = items.map(item => `<article class="submission-item"><div class="student-avatar">${item.name[0].toUpperCase()}</div><div><h3>${item.title}</h3><p>${item.name} <span>•</span> ${item.registration}</p><a href="${item.url}" target="_blank" rel="noopener">Open submission ↗</a></div></article>`).join("");
+    };
+    form.addEventListener("submit", event => {
+      event.preventDefault(); const data = Object.fromEntries(new FormData(form));
+      try { const parsed = new URL(data.url); if (!["http:", "https:"].includes(parsed.protocol)) throw new Error(); }
+      catch { alertBox.textContent = "Please enter a valid HTTP or HTTPS submission URL."; alertBox.hidden = false; return; }
+      const items = getItems(); items.push(data); localStorage.setItem(storageKey, JSON.stringify(items)); form.reset(); alertBox.hidden = true; render();
+    });
+    render();
+  </script>
+</body>
+</html>

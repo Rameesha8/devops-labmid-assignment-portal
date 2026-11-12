@@ -38,6 +38,22 @@ The workflow in `.github/workflows/ci.yml` runs on **every push** using a self-h
 
 By default the receiver URL is `http://127.0.0.1:5001/report`. To use a relay/tunnel instead, create a GitHub repository variable named `RECEIVER_URL` with that endpoint.
 
+## Bonus: GitHub Pages deployment
+
+The workflow also deploys the static browser-only demo in `static-demo/` to GitHub Pages after a push to `main` **only when the complete test-and-report job succeeds**. A failed test prevents the deployment job from running, so the previously published page remains unchanged. In repository **Settings -> Pages**, select **GitHub Actions** as the build and deployment source. The deployed URL will be shown in the successful `Deploy static demo to GitHub Pages` job.
+
+## Bonus: email report
+
+The workflow can email `ci-test-report.json` after both passing and failing runs. Add these repository secrets in **Settings -> Secrets and variables -> Actions**:
+
+- `SMTP_HOST` - SMTP server, for example `smtp.gmail.com`
+- `SMTP_PORT` - usually `587`
+- `SMTP_USERNAME` - sender email address
+- `SMTP_PASSWORD` - SMTP password; for Gmail, use an App Password, not the account password
+- `REPORT_EMAIL_TO` - recipient email address
+
+When all five secrets are present, the workflow sends a report summary and attaches the complete JSON report. Secrets are never committed to the repository.
+
 ## Demonstration checklist
 
 1. Push the working project and show the successful Actions run and `test-report.json` (`status: passed`).
